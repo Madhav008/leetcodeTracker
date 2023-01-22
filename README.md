@@ -1,6 +1,6 @@
 # leetcodeTracker
 #Requirements
-##pip install pyTelegramBotAPI
-##pip install pandas
-##pip install pymongo
+##pip install pyTelegramBotAPI\n
+##[pip install pandas]
+##[ip install pymongo]
 
