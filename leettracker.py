@@ -10,6 +10,18 @@ def send_welcome(message):
 
 
 
+@bot.message_handler(commands=['get'])
+def sign_handler(message):
+    res = get_question_ids(message.chat.id)
+    if res is not None:
+        while True:
+            res = get_question_ids(message.chat.id)
+            if res is not None:
+                inform_user_handler(message)
+                time.sleep(1)
+    else:
+        text = "First Set The *Usernames*."
+        sent_msg = bot.send_message(message.chat.id, text, parse_mode="Markdown")
 
 
 
@@ -22,18 +34,6 @@ def echo_all(message):
 
 
 
-@bot.message_handler(commands=['get'])
-def sign_handler(message):
-    res = get_question_ids(message.chat.id)
-    if res is not None:
-        while True:
-            res = get_question_ids(message.chat.id)
-            if res is not None:
-                inform_handler(message.chat.id, res['username'], res['data'])
-                time.sleep(1)
-    else:
-        text = "First Set The *Usernames*."
-        sent_msg = bot.send_message(message.chat.id, text, parse_mode="Markdown")
 
 
 
@@ -47,9 +47,9 @@ def profile_handler(message, data):
         bot.send_message(message.chat.id, horoscope_message, parse_mode="Markdown")
         insert_user(message.chat.id,message.text)
         insert_question(data["data"]["recentAcSubmissionList"][0]["id"],message.text)
-        inform_user_handler(message, message.text)
+        inform_user_handler(message)
 
-def inform_user_handler(message,username):
+def inform_user_handler(message):
     while True:
         chatid = message.chat.id
         res = get_question_ids(chatid)

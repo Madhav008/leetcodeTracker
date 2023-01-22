@@ -45,7 +45,7 @@ def get_question_ids(userid):
     
     # Find all the usernames for the given userid
     usernames = users.find_one({"userid": userid},{"username":1})
-
+    print(usernames["username"])
     # Iterate over all the usernames
     for username in usernames["username"]:
         # Find all question ids for the given username
@@ -62,6 +62,6 @@ def get_question_ids(userid):
             }
             return res
         else:
-            print("No Question is done by the user")
+            print("No new question is done by the %s"% username)
     return None
 
