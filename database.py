@@ -1,7 +1,14 @@
 import pymongo
-from utils import get_user_profile
+from utils import get_user_profile,get_problem_data
+import logging
 
-client = pymongo.MongoClient("mongodb+srv://madhav:madhav@cluster0.i9nlr.mongodb.net/codewithme")
+logging.basicConfig(filename="leetraker.log", 
+                    format='%(asctime)s %(message)s', 
+                    filemode='w') 
+logger=logging.getLogger() 
+logger.setLevel(logging.DEBUG)
+
+client = pymongo.MongoClient("mongodb://madhav:madhav@192.168.1.123:1405/?authMechanism=DEFAULT")
 
 
 # Create a new database named "telegramdb"
@@ -41,11 +48,11 @@ def insert_question(questionid, username):
 
 
 
-def get_question_ids(userid):
-    
+def get_question_ids(userid):  
     # Find all the usernames for the given userid
     usernames = users.find_one({"userid": userid},{"username":1})
-    print(usernames["username"])
+    logger.debug(usernames["username"])
+    logger.info("") 
     # Iterate over all the usernames
     for username in usernames["username"]:
         # Find all question ids for the given username
@@ -53,15 +60,37 @@ def get_question_ids(userid):
         id = data["data"]["recentAcSubmissionList"][0]["id"]
         questions = users.questions.find_one({"username": username},{"questionid":1})
         length = len(questions["questionid"])-1
+        logger.debug(data) 
+       
         if(questions["questionid"][length]!=id):
             #Call telegram bot new question is done by the user
+            titleSlug = data["data"]["recentAcSubmissionList"][0]["titleSlug"]
+            problem_data = get_problem_data(titleSlug)
+            logger.info(problem_data)
+            print(problem_data)
             res = {
                 'chatid':userid,
                 'username':username,
                 'data':data,
+                'question':problem_data["data"]["question"]
             }
+            
             return res
         else:
-            print("No new question is done by the %s"% username)
+            logger.debug("No new question is done by the %s"% username)
     return None
 
+
+def get_chat_ids():
+    all_docs = users.find({})
+
+    # Create a list to store all the userids
+    userids = []
+
+    # Iterate over all the documents in the "users" collection
+    for doc in all_docs:
+        # Append the "userid" field to the list of userids
+        userids.append(doc["userid"])
+    
+    logger.info(userids)
+    return userids

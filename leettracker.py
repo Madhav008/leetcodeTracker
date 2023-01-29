@@ -1,27 +1,30 @@
 import telebot
 from utils import get_user_profile
-from database import insert_user,insert_question,get_question_ids
-bot = telebot.TeleBot('5851502480:AAGUUhaTf0kMGvVT0xeCGweJJY36tUFxtUA')
+from database import insert_user,insert_question,get_question_ids,get_chat_ids
+# bot = telebot.TeleBot('5851502480:AAGUUhaTf0kMGvVT0xeCGweJJY36tUFxtUA')
+bot = telebot.TeleBot('1643625140:AAHpkVELtF5zgCT9m6_Hc2ZaTvSANesKj64')
+
 import time
 
+
+leetTracker = False
 @bot.message_handler(commands=['start', 'hello'])
 def send_welcome(message):
+    global leetTracker
     bot.reply_to(message, "Howdy, Which Profile you want to track \nType username of the profile?")
+    if leetTracker is False:
+        inform_user_handler(message)
+    leetTracker = True
+
 
 
 
 @bot.message_handler(commands=['get'])
 def sign_handler(message):
-    res = get_question_ids(message.chat.id)
-    if res is not None:
-        while True:
-            res = get_question_ids(message.chat.id)
-            if res is not None:
-                inform_user_handler(message)
-                time.sleep(1)
-    else:
-        text = "First Set The *Usernames*."
-        sent_msg = bot.send_message(message.chat.id, text, parse_mode="Markdown")
+    global leetTracker
+    if leetTracker is False:
+        inform_user_handler(message)
+    leetTracker = True
 
 
 
@@ -29,12 +32,18 @@ def sign_handler(message):
 def echo_all(message):
     bot.reply_to(message, "Tracking is enabled with username: %s" % message.text)
     data = get_user_profile(message.text)
-    profile_handler(message,data)
+    insert_handler(message,data)
 
-
-
-
-
+def insert_handler(message, data):
+    response =''
+    if 'errors' in data:
+        horoscope_message = f'*Error:* {data["errors"][0]["message"]}'
+        bot.send_message(message.chat.id, horoscope_message, parse_mode="Markdown")
+    else:
+        horoscope_message = f'*New Question :\n*{data["data"]["recentAcSubmissionList"][0]["title"]}'
+        bot.send_message(message.chat.id, horoscope_message, parse_mode="Markdown")
+        insert_user(message.chat.id,message.text)
+        insert_question(data["data"]["recentAcSubmissionList"][0]["id"],message.text)
 
 
 def profile_handler(message, data):
@@ -50,14 +59,32 @@ def profile_handler(message, data):
         inform_user_handler(message)
 
 def inform_user_handler(message):
+    chat_ids =  get_chat_ids()
     while True:
-        chatid = message.chat.id
-        res = get_question_ids(chatid)
-        if res is not None:
-            horoscope_message = f'*New Question\n*{res["username"]}*:\n*{res["data"]["data"]["recentAcSubmissionList"][0]["title"]}'
-            bot.send_message(message.chat.id, horoscope_message, parse_mode="Markdown")
-            insert_question(res["data"]["data"]["recentAcSubmissionList"][0]["id"],res["username"])
-        time.sleep(60)
+        user_questions = [] 
+        for chatid in chat_ids:
+            res = get_question_ids(chatid)
+            if res is not None:
+                username = res["username"]
+                title =res["data"]["data"]["recentAcSubmissionList"][0]["title"]
+                difficulty = res["question"]["difficulty"]
+                horoscope_message=''
+                if difficulty == 'Easy':
+                    horoscope_message = "_New Question_ \nUsername: *"+str(username)+"* \nQuestion: *"+str(title)+ "\nDifficulty :"+str(difficulty)+"🟢*"
+                if difficulty == 'Medium':
+                    horoscope_message = "_New Question_ \nUsername: *"+str(username)+"* \nQuestion: *"+str(title)+ "\nDifficulty :"+str(difficulty)+"🟡*"
+                if difficulty == 'Hard':
+                    horoscope_message = "_New Question_ \nUsername: *"+str(username)+"* \nQuestion: *"+str(title)+ "\nDifficulty :"+str(difficulty)+"🔴*"
+                bot.send_message(chatid, horoscope_message, parse_mode="Markdown")
+                obj = {
+                    'questionid': res["data"]["data"]["recentAcSubmissionList"][0]["id"],
+                    'username': res["username"]
+                }
+                user_questions.append(obj)
+            time.sleep(60)
+        for user_question in user_questions:
+            insert_question(user_question['questionid'],user_question["username"])
+    time.sleep(180)
 
 
 
