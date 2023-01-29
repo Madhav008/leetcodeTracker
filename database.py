@@ -50,6 +50,7 @@ def insert_question(questionid, username):
 
 def get_question_ids(userid):  
     # Find all the usernames for the given userid
+    logger.info("Getting Data for This Chat ID %s" % userid)
     usernames = users.find_one({"userid": userid},{"username":1})
     logger.debug(usernames["username"])
     logger.info("") 

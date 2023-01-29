@@ -13,8 +13,9 @@ def send_welcome(message):
     global leetTracker
     bot.reply_to(message, "Howdy, Which Profile you want to track \nType username of the profile?")
     if leetTracker is False:
+        print("Called Once")
+        leetTracker = True
         inform_user_handler(message)
-    leetTracker = True
 
 
 
@@ -23,8 +24,9 @@ def send_welcome(message):
 def sign_handler(message):
     global leetTracker
     if leetTracker is False:
+        print("Called Again")
+        leetTracker = True
         inform_user_handler(message)
-    leetTracker = True
 
 
 
@@ -81,7 +83,7 @@ def inform_user_handler(message):
                     'username': res["username"]
                 }
                 user_questions.append(obj)
-            time.sleep(60)
+            time.sleep(6)
         for user_question in user_questions:
             insert_question(user_question['questionid'],user_question["username"])
     time.sleep(180)
